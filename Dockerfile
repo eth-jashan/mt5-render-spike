@@ -9,7 +9,7 @@ RUN (Xvfb :99 -screen 0 1024x768x16 &) && sleep 2 && $W wineboot --init && sleep
  && curl -fsSLo get-pip.py https://bootstrap.pypa.io/get-pip.py && $W python.exe get-pip.py --no-warn-script-location -q \
  && timeout 600 $W python.exe -m pip install -q --no-cache-dir numpy==1.26.4 MetaTrader5 \
  && timeout 120 $W python.exe -c "import MetaTrader5 as m; print('mt5 pkg', m.__version__)" \
- && (pkill -f wineserver; pkill -f Xvfb; sleep 2; rm -f /tmp/.X99-lock; true)
+ && (pkill wineserver; pkill -x Xvfb; sleep 2; rm -f /tmp/.X99-lock; true)
 COPY spike.py /root/.wine/drive_c/spike.py
 COPY run.sh /run.sh
 CMD ["bash", "/run.sh"]
