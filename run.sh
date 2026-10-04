@@ -3,6 +3,7 @@
 mkdir -p /var/empty && python3 -m http.server "${PORT:-10000}" --directory /var/empty >/dev/null 2>&1 &
 Xvfb :99 -screen 0 1024x768x16 >/dev/null 2>&1 &
 sleep 2
+( n=0; while sleep 30; do n=$((n+1)); scrot -o /var/empty/boot-$n.png 2>/dev/null; done ) &
 ts() { echo "[spike] $(date +%T) $*"; }
 t0=$(date +%s)
 ts "wineboot ($(wine --version))"; timeout 300 $W wineboot --init >/dev/null 2>&1; ts "wineboot done rc=$?"; sleep 3; $W winecfg -v win10 >/dev/null 2>&1
