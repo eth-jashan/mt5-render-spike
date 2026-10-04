@@ -5,7 +5,7 @@ Xvfb :99 -screen 0 1024x768x16 >/dev/null 2>&1 &
 sleep 2
 ts() { echo "[spike] $(date +%T) $*"; }
 t0=$(date +%s)
-ts "wineboot ($(wine --version))"; $W wineboot --init >/dev/null 2>&1; sleep 3; $W winecfg -v win10 >/dev/null 2>&1
+ts "wineboot ($(wine --version))"; timeout 300 $W wineboot --init >/dev/null 2>&1; ts "wineboot done rc=$?"; sleep 3; $W winecfg -v win10 >/dev/null 2>&1
 P=/root/.wine/drive_c/py; mkdir -p $P && cd $P && unzip -q /opt/dl/py.zip && sed -i 's/^#import site/import site/' python311._pth
 ts "pip"; $W python.exe /opt/dl/get-pip.py -q --no-warn-script-location >/dev/null 2>&1
 timeout 600 $W python.exe -m pip install -q --no-cache-dir numpy==1.26.4 MetaTrader5 >/dev/null 2>&1

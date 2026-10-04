@@ -2,7 +2,7 @@
 # The build only installs packages and downloads files; all Wine work runs at container start (run.sh),
 # because background Wine processes keep Render's builder from finishing a step.
 FROM debian:bookworm-slim
-ENV DEBIAN_FRONTEND=noninteractive WINEPREFIX=/root/.wine WINEARCH=win64 WINEDEBUG=-all DISPLAY=:99 W=wine
+ENV DEBIAN_FRONTEND=noninteractive WINEPREFIX=/root/.wine WINEARCH=win64 WINEDEBUG=-all DISPLAY=:99 W=wine WINEDLLOVERRIDES="mscoree=;mshtml="
 RUN dpkg --add-architecture i386 && apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl gnupg xvfb procps unzip python3 scrot \
  && mkdir -pm755 /etc/apt/keyrings \
