@@ -8,7 +8,7 @@ PATH = r"C:\Program Files\MetaTrader 5\terminal64.exe"
 def step(name, fn):
     t = time.time(); r = fn(); print(f"[spike] {name}: {time.time() - t:.1f}s -> {r!r}"[:400], flush=True); return r
 
-ok = step("initialize (start terminal)", lambda: mt5.initialize(path=PATH, portable=True, timeout=180000))
+ok = step("initialize (start terminal)", lambda: mt5.initialize(path=PATH, portable=True, timeout=300000))
 print("[spike] last_error", mt5.last_error(), flush=True)
 if ok:
     ti = mt5.terminal_info(); print("[spike] terminal build", mt5.version(), "connected", ti.connected if ti else None, flush=True)
