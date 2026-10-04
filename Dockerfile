@@ -11,8 +11,9 @@ RUN (Xvfb :99 -screen 0 1024x768x16 &) && sleep 2 && $W wineboot --init && sleep
  && timeout 120 $W python.exe -c "import MetaTrader5 as m; print('mt5 pkg', m.__version__)"
 RUN rm -f /tmp/.X99-lock && (Xvfb :99 -screen 0 1024x768x16 &) && sleep 2 \
  && curl -fsSLo /tmp/mt5setup.exe https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe \
- && (timeout 900 $W /tmp/mt5setup.exe /auto; echo "setup exit $?") \
- && for i in $(seq 1 60); do [ -f "/root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" ] && break; sleep 5; done \
+ && ($W /tmp/mt5setup.exe /auto &) \
+ && for i in $(seq 1 120); do [ -f "/root/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" ] && echo "terminal64 present after $((i*5))s" && break; sleep 5; done \
+ && sleep 30 && (wineserver -k || true) && sleep 3 \
  && ls "/root/.wine/drive_c/Program Files/MetaTrader 5/" && rm -f /tmp/mt5setup.exe /tmp/.X99-lock
 COPY spike.py /root/.wine/drive_c/spike.py
 COPY run.sh /run.sh
