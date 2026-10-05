@@ -1,5 +1,8 @@
 """Runs the probes named in SPIKE_PROBES (comma-separated) against this slot's terminal."""
 import importlib, os, sys, traceback
+
+# The embeddable Python ignores the script folder (python311._pth), so add it for the probe modules.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import MetaTrader5 as mt5
 from common import emit, load_accounts, redact, timed_call
 

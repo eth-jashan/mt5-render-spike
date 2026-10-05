@@ -24,7 +24,7 @@ ts "accounts configured: $(python3 -c 'import json,os; print([a["label"] for a i
 # No login and no password in the startup config (spec 6.2); Task 3 records whether the wizard then blocks.
 printf '[Common]\r\nNewsEnable=0\r\n' > /root/.wine/drive_c/start.ini
 for f in /opt/brokers/*/servers.dat; do [ -f "$f" ] && cp "$f" "/root/.wine/drive_c/Program Files/MetaTrader 5/config/" && ts "seeded $(dirname "$f")"; done
-( while sleep 30; do echo "[result] {\"probe\":\"memory\",\"total_rss_mb\":$(ps -eo rss= | awk '{s+=$1} END {print int(s/1024)}'),\"free_mb\":$(free -m | awk '/Mem:/ {print $7}')}" | tee -a /var/empty/results.jsonl; done ) &
+( while sleep 30; do line="{\"probe\": \"memory\", \"total_rss_mb\": $(ps -eo rss= | awk '{s+=$1} END {print int(s/1024)}'), \"free_mb\": $(free -m | awk '/Mem:/ {print $7}')}"; echo "[result] $line"; echo "$line" >> /var/empty/results.jsonl; done ) &
 start_slot() {  # $1 = slot number; copies the golden prefix and starts its terminal
   local n=$1 P=/slots/s$1; mkdir -p /slots; cp -a /root/.wine "$P"
   ( export WINEPREFIX="$P"; cd "$P/drive_c/Program Files/MetaTrader 5" && $W terminal64.exe /portable '/config:C:\start.ini' >/tmp/terminal-s$n.log 2>&1 & )
@@ -42,4 +42,5 @@ else
   run_slot 1 "${SPIKE_PROBES:-switching,disk,broker,deals,offset,errors}" "${SPIKE_SWITCHES:-200}"
 fi
 ts "probes finished after $(( $(date +%s) - t0 ))s"
+echo "{\"probe\": \"finished\", \"seconds\": $(( $(date +%s) - t0 ))}" >> /var/empty/results.jsonl
 sleep infinity
