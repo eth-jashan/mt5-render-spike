@@ -70,7 +70,7 @@ if [ "${SPIKE_MODE:-single}" = "findbroker" ]; then
     echo "{\"probe\": \"servers-dat\", \"broker\": \"$b\", \"mentions\": ${c:-0}, \"path\": \"$(basename "$(dirname "$f")")/servers.dat\"}" >> /var/empty/results.jsonl
   done
   boot_slot 1; sleep 30
-  run_slot 1 "broker,deals" 0
+  run_slot 1 "${SPIKE_PROBES:-broker,deals}" "${SPIKE_SWITCHES:-0}"
 elif [ "${SPIKE_MODE:-single}" = "startup" ]; then
   # Which startup config lets Python attach (spec 6.2)? Each variant gets a fresh slot copy.
   for v in bare login password; do
