@@ -8,6 +8,7 @@ RUN mkdir -p /opt/dl && cd /opt/dl \
  && curl -fsSLo py.zip https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip \
  && curl -fsSLo get-pip.py https://bootstrap.pypa.io/get-pip.py \
  && curl -fsSLo mt5setup.exe https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe
-COPY spike.py /opt/spike.py
+COPY probes /opt/probes
+COPY brokers /opt/brokers
 COPY run.sh /run.sh
 CMD ["bash", "/run.sh"]
