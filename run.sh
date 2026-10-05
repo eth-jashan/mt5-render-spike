@@ -34,7 +34,33 @@ run_slot() {    # $1 = slot number, $2 = probes, $3 = switches
   cp -r /opt/probes /slots/s$n/drive_c/probes && cd /slots/s$n/drive_c/probes
   SPIKE_RESULTS='Z:\var\empty\results.jsonl' SPIKE_SLOT=s$n SPIKE_PROBES=$2 SPIKE_SWITCHES=$3 timeout 7200 $W ../py/python.exe -u run_probes.py
 }
-if [ "${SPIKE_MODE:-single}" = "four" ]; then
+write_ini() {  # $1 = bare | login | password: what the startup config holds
+  python3 - "$1" > /root/.wine/drive_c/start.ini <<'PY'
+import json, os, sys
+a = json.loads(os.environ["SPIKE_ACCOUNTS"])[0]
+lines = ["[Common]", "NewsEnable=0"]
+if sys.argv[1] in ("login", "password"):
+    lines += [f"Login={a['login']}", f"Server={a['server']}"]
+if sys.argv[1] == "password":
+    lines += [f"Password={a['investor']}"]
+print("\r\n".join(lines), end="\r\n")
+PY
+}
+if [ "${SPIKE_MODE:-single}" = "startup" ]; then
+  # Which startup config lets Python attach (spec 6.2)? Each variant gets a fresh slot copy.
+  for v in bare login password; do
+    write_ini $v; start_slot 1; sleep 90; scrot -o /var/empty/startup-$v.png 2>/dev/null
+    [ $v = password ] && rm -f /root/.wine/drive_c/start.ini /slots/s1/drive_c/start.ini
+    ( export WINEPREFIX=/slots/s1; cp -r /opt/probes /slots/s1/drive_c/probes; cd /slots/s1/drive_c/probes
+      SPIKE_RESULTS='Z:\var\empty\results.jsonl' SPIKE_SLOT=$v SPIKE_PROBES= timeout 400 $W ../py/python.exe -u run_probes.py )
+    WINEPREFIX=/slots/s1 wineserver -k; sleep 5; rm -rf /slots/s1
+  done
+  # Python starts the terminal itself, with no config at all.
+  write_ini bare; mkdir -p /slots; cp -a /root/.wine /slots/s1
+  ( export WINEPREFIX=/slots/s1; cp -r /opt/probes /slots/s1/drive_c/probes; cd /slots/s1/drive_c/probes
+    SPIKE_RESULTS='Z:\var\empty\results.jsonl' SPIKE_SLOT=python-launched SPIKE_PROBES= timeout 400 $W ../py/python.exe -u run_probes.py )
+  scrot -o /var/empty/startup-python-launched.png 2>/dev/null
+elif [ "${SPIKE_MODE:-single}" = "four" ]; then
   for n in 1 2 3 4; do start_slot $n; done; sleep 90
   for n in 1 2 3 4; do ( run_slot $n switching "${SPIKE_SWITCHES:-60}" ) & done; wait
 else

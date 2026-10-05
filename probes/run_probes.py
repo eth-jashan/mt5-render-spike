@@ -13,7 +13,7 @@ SLOT = os.environ.get("SPIKE_SLOT", "s1")
 def main() -> int:
     accounts = load_accounts(os.environ["SPIKE_ACCOUNTS"])
     secrets = [a.investor for a in accounts] + [a.master for a in accounts if a.master]
-    ok, seconds = timed_call(lambda: mt5.initialize(path=PATH, portable=True, timeout=120000), 180)
+    ok, seconds = timed_call(lambda: mt5.initialize(path=PATH, portable=True, timeout=300000), 330)
     emit("initialize", slot=SLOT, ok=bool(ok), seconds=round(seconds, 2), error=str(mt5.last_error()), build=str(mt5.version()))
     if not ok:
         return 1
