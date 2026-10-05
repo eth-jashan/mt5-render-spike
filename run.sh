@@ -53,7 +53,25 @@ if sys.argv[1] == "password":
 print("\r\n".join(lines), end="\r\n")
 PY
 }
-if [ "${SPIKE_MODE:-single}" = "startup" ]; then
+if [ "${SPIKE_MODE:-single}" = "findbroker" ]; then
+  # Teach the terminal new brokers through its own "Find your company" wizard (bare start shows it).
+  export WINEPREFIX=/root/.wine; DIR="/root/.wine/drive_c/Program Files/MetaTrader 5"
+  ( cd "$DIR" && $W terminal64.exe /portable '/config:C:\start.ini' >/tmp/terminal-find.log 2>&1 & ); sleep 75
+  scrot -o /var/empty/find-0.png; n=0
+  IFS=','; for name in ${SPIKE_FIND:-Pepperstone,IC Markets}; do n=$((n+1))
+    xdotool mousemove 445 228 click --repeat 3 1; sleep 1; xdotool key ctrl+a BackSpace; xdotool type --delay 80 "$name"; sleep 1
+    xdotool mousemove 779 228 click 1; sleep 25; scrot -o /var/empty/find-$n.png
+  done; unset IFS
+  xdotool mousemove 762 633 click 1; sleep 5; scrot -o /var/empty/find-cancel.png
+  pkill -f terminal64.exe; sleep 10; wineserver -k; sleep 3
+  f=$(find "$DIR" -iname servers.dat | head -1); cp "$f" /var/empty/servers.dat 2>/dev/null
+  for b in MetaQuotes Pepperstone ICMarkets; do
+    c=$(python3 -c "import sys; d=open(sys.argv[1],'rb').read(); print(d.count(sys.argv[2].encode('utf-16le')) + d.count(sys.argv[2].encode()))" "$f" "$b" 2>/dev/null)
+    echo "{\"probe\": \"servers-dat\", \"broker\": \"$b\", \"mentions\": ${c:-0}, \"path\": \"$(basename "$(dirname "$f")")/servers.dat\"}" >> /var/empty/results.jsonl
+  done
+  boot_slot 1; sleep 30
+  run_slot 1 "broker,deals" 0
+elif [ "${SPIKE_MODE:-single}" = "startup" ]; then
   # Which startup config lets Python attach (spec 6.2)? Each variant gets a fresh slot copy.
   for v in bare login password; do
     write_ini $v; start_slot 1; sleep 90; scrot -o /var/empty/startup-$v.png 2>/dev/null
