@@ -29,6 +29,13 @@ start_slot() {  # $1 = slot number; copies the golden prefix and starts its term
   local n=$1 P=/slots/s$1; mkdir -p /slots; cp -a /root/.wine "$P"
   ( export WINEPREFIX="$P"; cd "$P/drive_c/Program Files/MetaTrader 5" && $W terminal64.exe /portable '/config:C:\start.ini' >/tmp/terminal-s$n.log 2>&1 & )
 }
+boot_slot() {  # $1 = slot number. Boots with the FARM's own account (the first in SPIKE_ACCOUNTS) from a
+  # config in RAM, deleted once read: a terminal with no account blocks on its broker wizard (spike finding).
+  local n=$1 P=/slots/s$1; mkdir -p /slots /dev/shm/tj; cp -a /root/.wine "$P"
+  write_ini password > /dev/null; mv /root/.wine/drive_c/start.ini /dev/shm/tj/s$n.ini
+  ( export WINEPREFIX="$P"; cd "$P/drive_c/Program Files/MetaTrader 5" && $W terminal64.exe /portable "/config:Z:\\dev\\shm\\tj\\s$n.ini" >/tmp/terminal-s$n.log 2>&1 & )
+  sleep 60; rm -f /dev/shm/tj/s$n.ini
+}
 run_slot() {    # $1 = slot number, $2 = probes, $3 = switches
   local n=$1; export WINEPREFIX=/slots/s$n
   cp -r /opt/probes /slots/s$n/drive_c/probes && cd /slots/s$n/drive_c/probes
@@ -61,12 +68,13 @@ if [ "${SPIKE_MODE:-single}" = "startup" ]; then
     SPIKE_RESULTS='Z:\var\empty\results.jsonl' SPIKE_SLOT=python-launched SPIKE_PROBES= timeout 400 $W ../py/python.exe -u run_probes.py )
   scrot -o /var/empty/startup-python-launched.png 2>/dev/null
 elif [ "${SPIKE_MODE:-single}" = "four" ]; then
-  for n in 1 2 3 4; do start_slot $n; done; sleep 90
+  for n in 1 2 3 4; do boot_slot $n; done; sleep 30
   for n in 1 2 3 4; do ( run_slot $n switching "${SPIKE_SWITCHES:-60}" ) & done; wait
 else
-  start_slot 1; sleep 90
+  boot_slot 1; sleep 30
   run_slot 1 "${SPIKE_PROBES:-switching,disk,broker,deals,offset,errors}" "${SPIKE_SWITCHES:-200}"
 fi
+scrot -o /var/empty/end.png 2>/dev/null
 ts "probes finished after $(( $(date +%s) - t0 ))s"
 echo "{\"probe\": \"finished\", \"seconds\": $(( $(date +%s) - t0 ))}" >> /var/empty/results.jsonl
 sleep infinity
